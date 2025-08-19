@@ -1,0 +1,8 @@
+go 1.25.0
+
+use (
+	.
+	../..
+)
+
+replace github.com/zhimiaox/zmqx-core v0.0.1 => ../..

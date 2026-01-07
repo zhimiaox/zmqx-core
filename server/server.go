@@ -76,6 +76,7 @@ func New(opts ...Options) Server {
 			logLevel.Set(slog.LevelDebug)
 		}
 	}
+	// persistence
 	switch srv.cfg.Server.Persistence.Type {
 	case consts.Memory:
 		srv.persistence = pmemory.New(srv.cfg, srv.logger)
@@ -88,6 +89,10 @@ func New(opts ...Options) Server {
 		})
 		srv.persistence = predis.New(rdb, srv.cfg, srv.logger)
 		srv.federation = srv.newFederation(federationWithRedis(rdb))
+	default:
+		slog.Error("unsupported persistence type")
+		srv.persistence = pmemory.New(srv.cfg, srv.logger)
+		srv.federation = srv.newFederation(federationWithMemory())
 	}
 	// session expiration event
 	srv.persistence.Session().Event(func(clientID string) {

@@ -95,21 +95,23 @@ func (c *client) connectHandler(ctx context.Context, conn *packets.Connect) *pac
 		}
 		if conn.Properties.AuthMethod != nil {
 			resp, err := c.authHandler(ctx, conn, authOpts)
+			if resp != nil {
+				if connack.Properties == nil {
+					connack.Properties = new(packets.Properties)
+				}
+				connack.Properties.AuthMethod = conn.Properties.AuthMethod
+				connack.Properties.AuthData = resp.AuthData
+			}
 			if err != nil {
-				connack.Code = consts.BadAuthMethod
+				connack.Code = err.Code
 				return connack
 			}
-			if connack.Properties == nil {
-				connack.Properties = new(packets.Properties)
-			}
-			connack.Properties.AuthMethod = conn.Properties.AuthMethod
-			connack.Properties.AuthData = resp.AuthData
 			isBasicAuth = false
 		}
 	}
 	if isBasicAuth {
 		if err := c.srv.hooks.OnBasicAuth(conn, authOpts); err != nil {
-			connack.Code = consts.BadUserNameOrPassword
+			connack.Code = errors.Unwrap(err, consts.BadUserNameOrPassword).Code
 			return connack
 		}
 	}
@@ -189,8 +191,8 @@ func (c *client) authHandler(
 	ctx context.Context, conn *packets.Connect, authOpts *models.AuthOptions,
 ) (*models.AuthResponse, *errors.Error) {
 	authResponse, err := c.srv.hooks.OnEnhancedAuth(conn, authOpts)
-	if err != nil || authResponse == nil {
-		return nil, errors.NewError(consts.BadAuthMethod)
+	if err != nil {
+		return nil, errors.Unwrap(err, consts.BadAuthMethod)
 	}
 	for authResponse.Continue {
 		c.write(&packets.Auth{
@@ -212,8 +214,8 @@ func (c *client) authHandler(
 				return nil, errors.ErrMalformed
 			}
 			authResponse, err = c.srv.hooks.OnAuth(c, &models.AuthRequest{Auth: auth, Options: authOpts})
-			if err != nil || authResponse == nil {
-				return nil, errors.NewError(consts.BadAuthMethod)
+			if err != nil {
+				return nil, errors.Unwrap(err, consts.BadAuthMethod)
 			}
 		}
 	}

@@ -2,14 +2,17 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/zhimiaox/zmqx-core/config"
+	"github.com/zhimiaox/zmqx-core/errors"
 	"github.com/zhimiaox/zmqx-core/models"
 	"github.com/zhimiaox/zmqx-core/packets"
 	"github.com/zhimiaox/zmqx-core/server"
@@ -41,7 +44,30 @@ func main() {
 		// 设置部分hooks钩子
 		server.WithHook(
 			server.WithOnBasicAuth(func(conn *packets.Connect, authOpts *models.AuthOptions) error {
-				return nil
+				return errors.New("ssss")
+			}),
+			server.WithOnEnhancedAuth(func(conn *packets.Connect, authOpts *models.AuthOptions) (*models.AuthResponse, error) {
+				var n, r string
+				for _, v := range strings.Split(string(conn.Properties.AuthData), ",") {
+					if strings.HasPrefix(v, "n=") {
+						n = v[len("n="):]
+					}
+					if strings.HasPrefix(v, "r=") {
+						r = v[len("r="):]
+					}
+				}
+				return &models.AuthResponse{
+					Continue: true,
+					// r=<client_nonce+server_nonce>,s=<salt>,i=<iteration_count>
+					AuthData: []byte(fmt.Sprintf("r=%s%s,s=<salt>,i=1", r, n)),
+				}, nil
+			}),
+			server.WithOnAuth(func(client server.Client, req *models.AuthRequest) (*models.AuthResponse, error) {
+				// c=biws,r=<combined_nonce>,p=<client_proof>
+				return &models.AuthResponse{
+					Continue: false,
+					AuthData: []byte("v=<server_signature>"),
+				}, errors.New("auth fail")
 			}),
 			server.WithOnSubscribe(func(client server.Client, req *models.SubscribeRequest) error {
 				return nil

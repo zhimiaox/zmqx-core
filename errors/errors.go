@@ -55,7 +55,7 @@ func NewError(code consts.Code) *Error {
 	return &Error{Code: code}
 }
 
-func Unwrap(err error) *Error {
+func Unwrap(err error, defaultCode ...consts.Code) *Error {
 	if err == nil {
 		return nil
 	}
@@ -63,10 +63,14 @@ func Unwrap(err error) *Error {
 	if As(err, &ex) {
 		return ex
 	}
-	return &Error{
+	ex = &Error{
 		Code: consts.UnspecifiedError,
 		ErrorDetails: ErrorDetails{
 			ReasonString: []byte(err.Error()),
 		},
 	}
+	if len(defaultCode) > 0 {
+		ex.Code = defaultCode[0]
+	}
+	return ex
 }

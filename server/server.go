@@ -34,6 +34,7 @@ type Server interface {
 	Stop()
 	SetHooks(hooks Hooks)
 	Termination(clientID string)
+	Client(clientID string) (Client, bool)
 	Publisher
 }
 
@@ -185,6 +186,13 @@ func (srv *server) Termination(clientID string) {
 
 func (srv *server) Publish(message *models.Message) {
 	srv.deliver("", message)
+}
+
+func (srv *server) Client(clientID string) (Client, bool) {
+	srv.clientsMu.RLock()
+	c, ok := srv.clients[clientID]
+	srv.clientsMu.RUnlock()
+	return c, ok
 }
 
 // 已经判断是成功了，注册

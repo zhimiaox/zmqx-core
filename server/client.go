@@ -29,6 +29,10 @@ type Client interface {
 	ConnectedAt() time.Time
 	// Connection returns the raw net.Conn
 	Connection() net.Conn
+	// SetUserData User-defined data
+	SetUserData(data any)
+	// UserData return user defined data
+	UserData() any
 	// Error sends a disconnect packet to client, it is used to close v5 client.
 	Error(err error)
 }
@@ -64,6 +68,9 @@ type client struct {
 	unackStore      persistence.Unack
 	session         *models.Session
 	logger          *slog.Logger
+
+	// User-defined data
+	userData any
 }
 
 func (c *client) ClientOptions() *models.ClientOptions {
@@ -84,6 +91,14 @@ func (c *client) ConnectedAt() time.Time {
 
 func (c *client) Connection() net.Conn {
 	return c.rwc
+}
+
+func (c *client) SetUserData(data any) {
+	c.userData = data
+}
+
+func (c *client) UserData() any {
+	return c.userData
 }
 
 func (srv *server) newClient(conn net.Conn) {

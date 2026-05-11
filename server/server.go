@@ -148,16 +148,26 @@ func (srv *server) Start() {
 func (srv *server) Stop() {
 	srv.onceStop.Do(func() {
 		srv.stopping = true
-		for len(srv.clients) > 0 {
+		srv.clientsMu.RLock()
+		for _, c := range srv.clients {
+			c.Error(errors.NewError(consts.ServerMoved))
+		}
+		srv.clientsMu.RUnlock()
+		srv.logger.Info("client stopping waiting...")
+		for {
+			time.Sleep(time.Second)
 			if srv.clientsMu.TryRLock() {
+				if len(srv.clients) == 0 {
+					srv.clientsMu.RUnlock()
+					break
+				}
 				for _, c := range srv.clients {
 					c.Error(errors.NewError(consts.ServerMoved))
 				}
 				srv.clientsMu.RUnlock()
 			}
-			srv.logger.Info("stopping waiting...")
-			time.Sleep(time.Second)
 		}
+		srv.logger.Info("client all stopped")
 		if srv.wsListener != nil {
 			if err := srv.wsListener.Close(); err != nil {
 				srv.logger.Error("ws listener close", "err", err)
@@ -280,11 +290,12 @@ func (srv *server) unregisterClient(c *client) {
 			"expiry_interval", c.session.ExpiryInterval,
 			"has_will", c.session.Will != nil)
 	}
+	srv.hooks.OnClosed(c.opts.ClientID)
+
 	srv.clientsMu.Lock()
 	delete(srv.clients, c.opts.ClientID)
 	srv.clientsMu.Unlock()
 
-	srv.hooks.OnClosed(c.opts.ClientID)
 	c.logger.Info("client unregister")
 }
 

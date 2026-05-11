@@ -149,16 +149,16 @@ func (srv *server) Stop() {
 	srv.onceStop.Do(func() {
 		srv.stopping = true
 		for {
-			if srv.clientsMu.TryRLock() {
-				if len(srv.clients) == 0 {
-					srv.clientsMu.RUnlock()
-					break
-				}
-				for _, c := range srv.clients {
-					c.Error(errors.NewError(consts.ServerMoved))
-				}
+			srv.clientsMu.RLock()
+			if len(srv.clients) == 0 {
 				srv.clientsMu.RUnlock()
+				break
 			}
+			for _, c := range srv.clients {
+				c.Error(errors.NewError(consts.ServerMoved))
+			}
+			srv.clientsMu.RUnlock()
+
 			srv.logger.Info("client stopping waiting...")
 			time.Sleep(time.Second)
 		}

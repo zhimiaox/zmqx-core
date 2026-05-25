@@ -39,21 +39,18 @@ type Server interface {
 }
 
 type server struct {
-	onceStop   sync.Once
-	stopping   bool
-	cfg        *config.Config
-	logger     *slog.Logger
-	hooks      Hooks
-	federation Federation
-
-	wsListener  *http.Server
+	hooks       Hooks
+	federation  Federation
 	tcpListener net.Listener
-
-	clientsMu sync.RWMutex
-	clients   map[string]*client
-	register  chan *client
-
 	persistence persistence.Persistence
+	cfg         *config.Config
+	logger      *slog.Logger
+	wsListener  *http.Server
+	clients     map[string]*client
+	register    chan *client
+	clientsMu   sync.RWMutex
+	onceStop    sync.Once
+	stopping    bool
 }
 
 func New(opts ...Options) Server {

@@ -69,14 +69,14 @@ type UnsubscribeRequest struct {
 	// Unsubs groups all unsubscribe topic by the full topic name.
 	// You can modify the value of the map to edit the unsubscribe topic. But you cannot change the length of the map.
 	Unsubs map[string]*struct {
-		// TopicName is the topic that is going to unsubscribe.
-		TopicName string
 		// Error indicates whether to allow the unsubscription.
 		// Return nil means it is allowed to unsubscribe the topic.
 		// Return an error means it is not allow to unsubscribe the topic.
 		// It is recommended to use *codes.Error if you want to disallow the unsubscription. e.g:&codes.Error{Code:codes.NotAuthorized}
 		// See: https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901194
 		Error error
+		// TopicName is the topic that is going to unsubscribe.
+		TopicName string
 	}
 }
 

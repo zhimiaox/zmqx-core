@@ -1,6 +1,6 @@
 module zmqx-core/cmd/zmqx-test-d
 
-go 1.25.0
+go 1.26.0
 
 require github.com/zhimiaox/zmqx-core v0.0.1
 

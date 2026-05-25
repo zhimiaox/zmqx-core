@@ -522,14 +522,14 @@ func (c *client) unsubscribeHandler(unSub *packets.Unsubscribe) {
 	req := &models.UnsubscribeRequest{
 		Unsubscribe: unSub,
 		Unsubs: make(map[string]*struct {
-			TopicName string
 			Error     error
+			TopicName string
 		}),
 	}
 	for _, v := range unSub.Topics {
 		req.Unsubs[v] = &struct {
-			TopicName string
 			Error     error
+			TopicName string
 		}{TopicName: v}
 	}
 	err := srv.hooks.OnUnsubscribe(c, req)

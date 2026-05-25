@@ -11,19 +11,19 @@ import (
 
 // deliver controllers the delivery behaviors according to the DeliveryMode config. (overlap or onlyonce)
 type deliver struct {
+	now     time.Time
 	fn      models.SubscriptionIterateFn
 	sl      sharedList
 	mq      maxQos
-	matched bool
-	now     time.Time
 	msg     *models.Message
 	srv     *server
+	matched bool
 }
 
 // sharedList is the subscriber (client id) list of shared subscriptions. (key by topic name).
 type sharedList map[string][]struct {
-	clientID string
 	sub      *models.Subscription
+	clientID string
 }
 
 // maxQos records the maximum qos subscription for the non-shared topic. (key by topic name).
@@ -49,8 +49,8 @@ func (srv *server) deliver(srcClientID string, msg *models.Message) (matched boo
 		if sub.ShareName != "" {
 			fullTopic := sub.GetFullTopicName()
 			d.sl[fullTopic] = append(d.sl[fullTopic], struct {
-				clientID string
 				sub      *models.Subscription
+				clientID string
 			}{clientID: clientID, sub: sub})
 			return true
 		}

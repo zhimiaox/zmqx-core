@@ -42,35 +42,28 @@ type client struct {
 		context.Context
 		cancel context.CancelFunc
 	}
-	done   chan struct{}
-	regErr chan error
-
-	srv          *server
-	rwc          net.Conn
-	packetReader *packets.Reader
-	packetWriter *packets.Writer
-	in           chan packets.Packet
-	out          chan packets.Packet
-
-	opts          *models.ClientOptions
-	version       packets.Version
-	cleanStart    bool
-	sessionResume bool
-	keepAlive     time.Duration
-	// serverReceiveMaximumQuota mqtt v5 server receives max quota
-	serverReceiveMaximumQuota uint16
-	// serverQuotaMu mqtt v5 quota lock
-	serverQuotaMu sync.Mutex
-
-	packetIDLimiter persistence.PacketIDLimiter
-	topicAlias      persistence.TopicAliasManager
-	queueStore      persistence.Queue
-	unackStore      persistence.Unack
-	session         *models.Session
-	logger          *slog.Logger
-
-	// User-defined data
-	userData any
+	queueStore                persistence.Queue
+	topicAlias                persistence.TopicAliasManager
+	packetIDLimiter           persistence.PacketIDLimiter
+	rwc                       net.Conn
+	unackStore                persistence.Unack
+	userData                  any // User-defined data
+	out                       chan packets.Packet
+	in                        chan packets.Packet
+	opts                      *models.ClientOptions
+	packetWriter              *packets.Writer
+	logger                    *slog.Logger
+	session                   *models.Session
+	packetReader              *packets.Reader
+	srv                       *server
+	regErr                    chan error
+	done                      chan struct{}
+	keepAlive                 time.Duration
+	serverQuotaMu             sync.Mutex //  mqtt v5 quota lock
+	serverReceiveMaximumQuota uint16     // mqtt v5 server receives max quota
+	sessionResume             bool
+	cleanStart                bool
+	version                   packets.Version
 }
 
 func (c *client) ClientOptions() *models.ClientOptions {

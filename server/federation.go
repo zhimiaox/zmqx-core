@@ -20,13 +20,13 @@ type Federation interface {
 type federationOption func(fed *federation)
 
 type federation struct {
-	srv   *server
-	sType string
-	redis struct {
+	srv      *server
+	listenFn func()
+	redis    struct {
 		rdb           redis.UniversalClient
 		clientChannel string
 	}
-	listenFn func()
+	sType string
 }
 
 func federationWithRedis(rdb redis.UniversalClient) federationOption {
